@@ -1,0 +1,119 @@
+<!--index.wxml-->
+<view class="top-images">
+  <image class="logo-img" src="/images/华科校徽.jpeg" mode="aspectFit" />
+  <image class="logo-img" src="/images/Image_1752148852453.jpg" mode="aspectFit" />
+</view>
+<view class="container">
+  <view class="filter-grid">
+    <picker class="filter-cell date-cell" mode="date" value="{{selectedDate}}" bindchange="onDatePickerChange">
+      <view class="icon">📅</view>
+      <view class="text">{{selectedTimeSlot && selectedTimeSlot !== '不限' ? selectedTimeSlot : '时间'}}</view>
+    </picker>
+    <picker class="filter-cell project-cell" mode="selector" range="{{projectOptions}}" value="{{projectIndex}}" bindchange="onProjectChange">
+      <view class="icon">🏸</view>
+      <view class="text">{{projectIndex > 0 ? projectOptions[projectIndex] : '项目'}}</view>
+    </picker>
+    <picker class="filter-cell location-cell" mode="selector" range="{{locationOptions}}" value="{{locationIndex}}" bindchange="onLocationChange">
+      <view class="icon">📍</view>
+      <view class="text">{{locationIndex > 0 ? locationOptions[locationIndex] : '地点'}}</view>
+    </picker>
+    <picker class="filter-cell level-cell" mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="onLevelChange">
+      <view class="icon">⭐</view>
+      <view class="text">{{levelIndex > 0 ? levelOptions[levelIndex] : '等级'}}</view>
+    </picker>
+  </view>
+  <!-- 时间段弹窗 -->
+  <view wx:if="{{showTimeSheet}}" class="time-sheet-mask" catchtap="onCloseTimeSheet">
+    <view class="time-sheet">
+      <view class="sheet-title">请选择时间段</view>
+      <view class="sheet-option" wx:for="{{timeSlotOptions}}" wx:key="index" data-index="{{index}}" bindtap="onTimeSlotSelect">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 约球列表 -->
+  <scroll-view class="match-list" scroll-y="true" bindscrolltolower="onLoadMore">
+    <view class="match-item" wx:for="{{matchList}}" wx:key="_id">
+      <view class="card-header">
+        <view class="card-title-row">
+          <text class="place">{{item.location}}</text>
+          <text class="space">  </text>
+          <text class="project">{{item.project}}</text>
+        </view>
+        <view class="card-status-circle {{item.isFull ? 'full' : 'not-full'}}"></view>
+      </view>
+      <view class="card-info-row">
+        <text class="card-time">{{item.date}} {{item.timeSlot}}</text>
+      </view>
+      <view class="card-info-row">
+        <text class="card-level">等级：{{item.level}}</text>
+      </view>
+      <view class="card-info-row">
+          <text class="card-player-count">场地人数：{{item.playerCount}}</text>
+          <text style="margin-left: 40rpx;">捞人人数：{{item.recruitCount !== undefined ? item.recruitCount : '-'}}</text>
+        </view>
+        <view class="card-expand-btn" bindtap="onToggleExpand" data-match-id="{{item._id}}">
+          <text>{{expandedMatches[item._id] ? '收起' : '展开'}}</text>
+        </view>
+      <view wx:if="{{expandedMatches[item._id]}}" class="card-detail">
+        <view class="card-contact">联系方式：{{item.contact}}</view>
+        <view class="card-desc">备注：{{item.description}}</view>
+        <view class="card-detail-bottom-row">
+          <view class="card-avatars">
+            <block wx:for="{{item.participants}}" wx:key="_id" wx:for-item="person">
+              <image class="avatar {{person.isPublisher ? 'publisher-avatar' : ''}}" src="{{person.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" bindtap="onAvatarTap" data-id="{{person._id}}" />
+            </block>
+          </view>
+          <button class="join-btn {{item.isFull ? 'disabled' : ''}}"
+                  bindtap="onJoinMatch"
+                  data-id="{{item._id}}"
+                  disabled="{{item.isFull}}">
+            {{item.isFull ? '已满' : '加入'}}
+          </button>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+  
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore}}">
+    <text>让羽毛球飞一会...</text>
+  </view>
+  <view class="no-more" wx:else>
+    <text>球场是有底线的</text>
+  </view>
+</view>
+
+<!-- 个人信息弹窗 -->
+<view wx:if="{{showProfileModal}}" class="profile-modal-mask" catchtap="onCloseProfileModal">
+  <view class="profile-modal">
+    <view class="profile-title">个人信息</view>
+    <view class="profile-row">
+      <view class="profile-label">头像</view>
+      <image class="profile-avatar" src="{{profileUser.avatarUrl || profileUser.avatar}}" />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">昵称</view>
+      <input class="profile-input" value="{{profileUser.nickName || profileUser.name}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">性别</view>
+      <input class="profile-input" value="{{profileUser.gender || '未知'}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">等级</view>
+      <input class="profile-input" value="{{profileUser.level || '未知'}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">生日</view>
+      <input class="profile-input" value="{{profileUser.birthdate || '未知'}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">年龄</view>
+      <input class="profile-input" value="{{profileUser.age || '未知'}}" disabled />
+    </view>
+  </view>
+</view>
+
+  

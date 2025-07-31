@@ -1,0 +1,69 @@
+<view class="profile-container">
+  <view class="top-section">
+    <view class="avatar-wrapper">
+      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" bindtap="onAvatarUpload" mode="aspectFill" />
+    </view>
+  </view>
+  <view class="bottom-section">
+    <!-- 个人信息显示区域 -->
+    <view class="info-section">
+      <view class="info-title">个人信息</view>
+      <view class="info-list">
+        <view class="info-item">
+          <text class="info-label">昵称</text>
+          <text class="info-value">{{userInfo.nickname || '未知'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">性别</text>
+          <text class="info-value">{{userInfo.gender || '未知'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">等级</text>
+          <text class="info-value">{{userInfo.level || '未知'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">年龄</text>
+          <text class="info-value">{{userInfo.age || '未知'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="menu-list">
+      <button class="menu-btn" bindtap="onProfileInfo">编辑个人信息</button>
+      <button class="menu-btn menu-btn-with-badge" bindtap="onMyPublished">
+        我发布的
+        <view class="notification-badge" wx:if="{{myPublishedNotificationCount > 0}}">
+          {{myPublishedNotificationCount > 99 ? '99+' : myPublishedNotificationCount}}
+        </view>
+      </button>
+      <button class="menu-btn" bindtap="onMyJoined">我参加的</button>
+    </view>
+  </view>
+</view>
+
+<!-- 个人信息弹窗 -->
+<view class="popup-mask" wx:if="{{showProfilePopup}}" bindtap="closeProfilePopup"></view>
+<view class="profile-popup" wx:if="{{showProfilePopup}}">
+  <view class="popup-title">个人信息</view>
+  <view class="popup-item">
+    <text>昵称</text>
+    <input class="popup-input" value="{{editNickName}}" placeholder="请输入昵称" bindinput="onNickNameInput" />
+  </view>
+  <view class="popup-item">
+    <text>性别</text>
+    <picker mode="selector" range="{{genderOptions}}" value="{{genderIndex}}" bindchange="onGenderChange">
+      <view class="popup-input">{{genderOptions[genderIndex] || '请选择性别'}}</view>
+    </picker>
+  </view>
+  <view class="popup-item">
+      <text>出生年月</text>
+      <picker mode="date" fields="month" value="{{editBirthdate}}" start="1900-01" end="{{currentDate}}" bindchange="onBirthdateChange">
+        <view class="popup-input">{{editBirthdate || '请选择出生年月'}}</view>
+      </picker>
+    </view>
+  <view class="popup-item">
+    <text>等级</text>
+    <input class="popup-input" value="{{editLevel}}" placeholder="例如：1.5" bindinput="onLevelInput" />
+  </view>
+  <button class="popup-btn" bindtap="onProfileSave">保存</button>
+</view>

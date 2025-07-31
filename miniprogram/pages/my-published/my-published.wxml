@@ -1,0 +1,106 @@
+<view class="container">
+  <scroll-view class="match-list" scroll-y="true">
+    <view class="section-title">正在进行</view>
+    <view wx:if="{{ongoingList.length === 0}}" class="empty-tip">暂无正在进行的活动</view>
+    <view class="match-item" wx:for="{{ongoingList}}" wx:key="_id">
+      <view class="card-header">
+        <view class="card-title-row">
+          <text class="place">{{item.location}}</text>
+          <text class="space">  </text>
+          <text class="project">{{item.project}}</text>
+        </view>
+        <view class="card-status-circle {{item.isFull ? 'full' : 'not-full'}}"></view>
+      </view>
+      <view class="card-info-row">
+        <text class="card-time">{{item.date}} {{item.timeSlot}}</text>
+      </view>
+      <view class="card-info-row">
+        <text class="card-level">等级：{{item.level}}</text>
+      </view>
+      <view class="card-info-row">
+        <text class="card-player-count">场地人数：{{item.playerCount}}</text>
+        <text style="margin-left: 40rpx;">捞人人数：{{item.recruitCount !== undefined ? item.recruitCount : '-'}}</text>
+      </view>
+      <view class="card-expand-btn" bindtap="onToggleExpand" data-match-id="{{item._id}}">
+        <text>{{expandedMatches[item._id] ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{expandedMatches[item._id]}}" class="card-detail">
+        <view class="card-contact">联系方式：{{item.contact}}</view>
+        <view class="card-desc">备注：{{item.description}}</view>
+        <view class="card-detail-bottom-row">
+          <view class="card-avatars">
+            <block wx:for="{{item.participants}}" wx:key="_id" wx:for-item="person">
+              <image class="avatar {{person.isPublisher ? 'publisher-avatar' : ''}}" src="{{person.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" bindtap="onAvatarTap" data-id="{{person._id}}" />
+            </block>
+          </view>
+          <button class="edit-btn" bindtap="onEdit" data-id="{{item._id}}">编辑</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-title">已经结束</view>
+    <view wx:if="{{finishedList.length === 0}}" class="empty-tip">暂无已结束的活动</view>
+    <view class="match-item" wx:for="{{finishedList}}" wx:key="_id">
+      <view class="card-header">
+        <view class="card-title-row">
+          <text class="place">{{item.location}}</text>
+          <text class="space">  </text>
+          <text class="project">{{item.project}}</text>
+        </view>
+        <view class="card-status-circle finished"></view>
+      </view>
+      <view class="card-info-row">
+        <text class="card-time">{{item.date}} {{item.timeSlot}}</text>
+      </view>
+      <view class="card-info-row">
+        <text class="card-level">等级：{{item.level}}</text>
+      </view>
+      <view class="card-info-row">
+        <text class="card-player-count">场地人数：{{item.playerCount}}</text>
+        <text style="margin-left: 40rpx;">捞人人数：{{item.recruitCount !== undefined ? item.recruitCount : '-'}}</text>
+      </view>
+      <view class="card-expand-btn" bindtap="onToggleExpand" data-match-id="{{item._id}}">
+        <text>{{expandedMatches[item._id] ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{expandedMatches[item._id]}}" class="card-detail">
+        <view class="card-contact">联系方式：{{item.contact}}</view>
+        <view class="card-desc">备注：{{item.description}}</view>
+        <view class="card-detail-bottom-row">
+          <view class="card-avatars">
+            <block wx:for="{{item.participants}}" wx:key="_id" wx:for-item="person">
+              <image class="avatar {{person.isPublisher ? 'publisher-avatar' : ''}}" src="{{person.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" bindtap="onAvatarTap" data-id="{{person._id}}" />
+            </block>
+          </view>
+          <!-- 已结束的活动没有按钮 -->
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 个人信息弹窗 -->
+<view wx:if="{{showProfileModal}}" class="profile-modal-mask" catchtap="onCloseProfileModal">
+  <view class="profile-modal">
+    <view class="profile-title">个人信息</view>
+    <view class="profile-row">
+      <view class="profile-label">头像</view>
+      <image class="profile-avatar" src="{{profileUser.avatarUrl || profileUser.avatar}}" />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">昵称</view>
+      <input class="profile-input" value="{{profileUser.nickName || profileUser.name}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">性别</view>
+      <input class="profile-input" value="{{profileUser.gender || '未知'}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">等级</view>
+      <input class="profile-input" value="{{profileUser.level || '未知'}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">年龄</view>
+      <input class="profile-input" value="{{profileUser.age || '未知'}}" disabled />
+    </view>
+  </view>
+</view>

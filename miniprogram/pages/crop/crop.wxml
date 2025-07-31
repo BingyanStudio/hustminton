@@ -1,0 +1,47 @@
+<!--crop.wxml-->
+<view class="crop-container">
+  <view class="crop-header">
+    <view class="header-content">
+      <view class="back-btn" bindtap="onCancelCrop">
+        <text class="back-icon">‹</text>
+      </view>
+      <text class="crop-title">裁剪头像</text>
+      <view class="confirm-text" bindtap="onConfirmCrop">
+        <text>完成</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="crop-area">
+    <!-- 背景遮罩 -->
+    <view class="crop-mask"></view>
+
+    <!-- 裁剪框 -->
+    <view class="crop-frame">
+      <!-- 隐藏的canvas用于裁剪，使用高分辨率 -->
+      <canvas canvas-id="cropperCanvas" style="width: 400px; height: 400px; position: absolute; left: -9999px;"></canvas>
+
+      <image
+        class="crop-image"
+        src="{{imageSrc}}"
+        style="width: {{imageWidth * scale}}px; height: {{imageHeight * scale}}px; left: {{cropperLeft}}px; top: {{cropperTop}}px;"
+        bindtouchstart="onImageTouchStart"
+        bindtouchmove="onImageTouchMove"
+        bindtouchend="onImageTouchEnd"
+        bindtap="onImageTap"
+      />
+      <!-- 裁剪框边框 -->
+      <view class="crop-border"></view>
+    </view>
+
+    <!-- 网格线 -->
+    <view class="crop-grid">
+      <view class="grid-line grid-line-v1"></view>
+      <view class="grid-line grid-line-v2"></view>
+      <view class="grid-line grid-line-h1"></view>
+      <view class="grid-line grid-line-h2"></view>
+    </view>
+  </view>
+
+
+</view>

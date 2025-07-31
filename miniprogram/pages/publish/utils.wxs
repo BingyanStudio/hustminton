@@ -1,0 +1,18 @@
+// 判断index是否在选中的数组中
+function isSelected(selectedIndexes, currentIndex) {
+  if (!selectedIndexes || selectedIndexes.length === 0) {
+    return false;
+  }
+  
+  for (var i = 0; i < selectedIndexes.length; i++) {
+    if (selectedIndexes[i] === currentIndex) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+module.exports = {
+  isSelected: isSelected
+};

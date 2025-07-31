@@ -1,0 +1,33 @@
+/**app.wxss**/
+:root {
+  --brand-blue: #005BAC;
+  --brand-yellow: #FFD700;
+  --light-blue: #E3F2FD;
+  --accent-orange: #FF9800;
+  --success-green: #4CAF50;
+  --text-main: #333333;
+  --text-sub: #999999;
+}
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 200rpx 0;
+  box-sizing: border-box;
+}
+
+/* 底部导航按钮过渡效果 */
+.tab-bar-item {
+  transition: all 0.3s ease-in-out;
+}
+
+.tab-bar-item.active {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.tab-bar-item:not(.active) {
+  opacity: 0.7;
+}

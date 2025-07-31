@@ -1,0 +1,299 @@
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.form-container {
+  margin-left: 30rpx;
+  margin-right: 30rpx;
+  background-color: rgba(240, 247, 255, 0.85);
+  border-radius: 20rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.10);
+}
+
+.form-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 40rpx;
+  color: #333;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  padding-bottom: 20rpx;
+}
+.form-item:last-child {
+  border-bottom: none;
+}
+.input:focus, .picker:focus, .textarea:focus {
+  border-color: #3cc51f;
+}
+.input-tip {
+  font-size: 22rpx;
+  color: #aaa;
+  margin-top: 6rpx;
+}
+.form-tip {
+  text-align: center;
+  color: #888;
+  font-size: 24rpx;
+  margin-bottom: 20rpx;
+}
+.label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 15rpx;
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  height: 80rpx;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  background-color: #fafafa;
+}
+
+.picker {
+  width: 100%;
+  height: 80rpx;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.picker.time-picker {
+  width: 100%;
+  height: 80rpx;
+  border-radius: 10rpx;
+  background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  margin-top: 10rpx;
+  position: relative;
+  overflow: visible;
+}
+.picker-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+  padding-left: 20rpx;
+}
+.time-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+.time-slot-box {
+  min-width: 180rpx;
+  padding: 18rpx 0;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.time-slot-box:active {
+  background: #3cc51f;
+  color: #fff;
+  border-color: #3cc51f;
+}
+
+.textarea {
+  display: inline-block;
+  width: auto;
+  min-width: 100%;
+  min-height: 80rpx;
+  height: auto;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  background-color: #fafafa;
+  resize: none;
+  margin-left: 8rpx;
+  margin-right: 8rpx;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #3cc51f, #2ecc71);
+  color: #fff;
+  border: none;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-top: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(60,197,31,0.15);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.submit-btn:active {
+  opacity: 0.8;
+  box-shadow: 0 2rpx 8rpx rgba(60,197,31,0.10);
+  transform: scale(0.97);
+}
+
+.bottom-sheet-mask {
+  position: fixed;
+  left: 0; right: 0; bottom: 0; top: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bottom-sheet {
+  width: 100%;
+  background: #fff;
+  border-top-left-radius: 24rpx;
+  border-top-right-radius: 24rpx;
+  padding: 40rpx 0 40rpx 0;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.08);
+}
+.sheet-title {
+  text-align: center;
+  font-size: 32rpx;
+  margin-bottom: 32rpx;
+  color: #333;
+}
+.bottom-time-slot-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+}
+.bottom-time-slot-box {
+  width: 60%;
+  min-width: 200rpx;
+  padding: 22rpx 0;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #333;
+  border: 2rpx solid #e0e0e0;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.bottom-time-slot-box:active {
+  background: #3cc51f;
+  color: #fff;
+  border-color: #3cc51f;
+}
+
+.picker-full {
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 2;
+}
+
+/* 项目选择样式 */
+.project-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 15rpx;
+}
+
+.form-item .project-options .project-option {
+  min-width: 120rpx;
+  padding: 16rpx 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+  transition: all 0.2s;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  border: 1rpx solid #ddd;
+}
+
+/* 项目选中状态 - 使用更高特异性的选择器 */
+.form-item .project-options .project-option.selected {
+  background: #3cc51f !important;
+  color: #fff !important;
+  border: 2rpx solid #3cc51f !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4rpx 12rpx rgba(60, 197, 31, 0.3) !important;
+  font-weight: bold !important;
+}
+
+/* 点击效果 - 只对未选中的项目生效 */
+.form-item .project-options .project-option:not(.selected):active {
+  transform: scale(0.95);
+  background: #e8e8e8;
+}
+
+.publish-bg {
+  background: #fff;
+  padding-left: 10rpx;
+  padding-right: 10rpx;
+  min-height: 100vh;
+}
+
+.input, .picker {
+  width: auto;
+  max-width: 100%;
+  margin-left: 8rpx;
+  margin-right: 8rpx;
+  display: block;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
+  box-sizing: border-box;
+  display: flex;
+}
+
+
+
+
+
+.form-item-flex {
+  display: flex;
+  flex-direction: row;
+  gap: 24rpx;
+}
+.form-item-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.textarea {
+  display: inline-block;
+  width: auto;
+  min-width: 100%;
+  min-height: 80rpx;
+  height: auto;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  background-color: #fafafa;
+  resize: none;
+  display: inline-block;
+}

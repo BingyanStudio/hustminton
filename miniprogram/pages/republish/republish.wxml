@@ -1,0 +1,95 @@
+<wxs module="utils" src="./utils.wxs"></wxs>
+<view class="publish-bg">
+  <view class="form-container">
+    <view class="form-title">{{isEditMode ? '编辑约球信息' : '发布约球信息'}}</view>
+    
+    <view class="form-item">
+      <text class="label">约球时间</text>
+      <picker mode="date" value="{{selectedDate}}" bindchange="onDatePickerChange">
+        <view class="picker time-picker">{{dateText}}</view>
+      </picker>
+    </view>
+    <view wx:if="{{showTimeSheet}}" class="bottom-sheet-mask" catchtap="onCloseTimeSheet">
+      <view class="bottom-sheet" catchtap="true">
+        <view class="sheet-title">请选择时间段</view>
+        <view class="bottom-time-slot-list">
+          <view class="bottom-time-slot-box" wx:for="{{timeSlotOptions}}" wx:key="index" data-index="{{index}}" bindtap="onTimeSlotSelect">
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">约球地点</text>
+      <picker mode="selector" range="{{locationOptions}}" value="{{locationIndex}}" bindchange="onLocationChange">
+        <view class="picker">{{locationOptions[locationIndex] || '请选择地点'}}</view>
+      </picker>
+    </view>
+    
+    <view class="form-item form-item-flex">
+      <view class="form-item-half">
+        <text class="label">场地人数</text>
+        <picker range="{{playerCounts}}" value="{{playerCountIndex}}" bindchange="onPlayerCountChange">
+          <view class="picker">{{playerCounts[playerCountIndex] || '请选择人数'}}</view>
+        </picker>
+      </view>
+      <view class="form-item-half">
+        <text class="label">捞人人数</text>
+        <picker range="{{recruitCount}}" value="{{recruitCountIndex}}" bindchange="onRecruitCountChange">
+          <view class="picker">{{recruitCount[recruitCountIndex] || '请选择捞人人数'}}</view>
+        </picker>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">约球项目</text>
+      <view class="project-options">
+        <view
+          wx:for="{{projectOptions}}"
+          wx:key="index"
+          data-project="{{item}}"
+          data-index="{{index}}"
+          bindtap="onProjectSelect"
+          class="project-option{{utils.isSelected(selectedProjectIndexes, index) ? ' selected' : ''}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">约球等级</text>
+      <picker mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="onLevelChange">
+        <view class="picker">{{levelOptions[levelIndex] || '请选择等级'}}</view>
+      </picker>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">约球描述</text>
+      <textarea
+        class="textarea"
+        placeholder="请输入约球描述"
+        bindinput="onDescriptionInput"
+        style="width: {{textareaWidth || 'auto'}}"
+        value="{{description}}"
+        auto-height="{{true}}"
+      ></textarea>
+      <view class="input-tip">建议注明具体等级、是否允许炸鱼等</view>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">联系方式</text>
+      <input class="input" placeholder="请输入联系方式" model:value="{{contact}}" />
+      <view class="input-tip">请填写qq号或手机号，方便联系</view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button class="submit-btn" bindtap="onSubmit">
+      {{isEditMode ? '更新约球' : '发布约球'}}
+    </button>
+
+    <!-- 删除按钮（仅编辑模式显示） -->
+    <button wx:if="{{isEditMode}}" class="delete-btn" bindtap="onDelete">删除约球</button>
+  </view>
+</view>
