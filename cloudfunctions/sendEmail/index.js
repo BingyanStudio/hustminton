@@ -9,7 +9,7 @@ var config = {
     secure: true, // 使用SSL
     auth: {
         user: '1022818233@qq.com', //邮箱账号
-        pass: 'jzrfppbymhexbfdf'  //邮箱的授权码
+        pass: ''  //邮箱的授权码
     },
     // 增加超时设置
 };
