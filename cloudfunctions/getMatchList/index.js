@@ -5,16 +5,60 @@ const db = cloud.database()
 const _ = db.command
 
 exports.main = async (event, context) => {
-  const { page = 1, pageSize = 10, date = '', project = [] } = event
+  const { page = 1, pageSize = 10, date = '', project = [], location = '', level = '', timeSlot = '' } = event
   const skip = (page - 1) * pageSize
+
+  console.log('云函数接收到的参数:', { page, pageSize, date, project, location, level, timeSlot })
 
   try {
     // 构建查询条件
+    // 获取当前时间
+    const now = new Date();
+    
+    // 构建基础查询条件
+    const whereConditions = [];
+
+    // 显示活跃状态的活动或者尚未结束的活动
+    // 这里只做基础筛选，具体的时间判断在前端处理
+    whereConditions.push(_.or([
+      { status: 'active' },
+      { date: _.gte(now.toISOString().split('T')[0]) } // 今天及以后的活动
+    ]));
+
+    // 日期筛选
+    if (date) {
+      whereConditions.push({ date: _.gte(date) });
+    }
+
+    // 项目筛选 - project字段在数据库中是数组，需要检查数组中是否包含指定项目
+    if (project.length > 0) {
+      console.log('添加项目筛选:', project);
+      // 使用 _.elemMatch 或 _.in 来匹配数组中的元素
+      whereConditions.push({
+        project: _.elemMatch(_.in(project))
+      });
+    }
+
+    // 地点筛选
+    if (location) {
+      console.log('添加地点筛选:', location);
+      whereConditions.push({ location: location });
+    }
+
+    // 等级筛选
+    if (level) {
+      console.log('添加等级筛选:', level);
+      whereConditions.push({ level: level });
+    }
+
+    // 时间段筛选
+    if (timeSlot) {
+      console.log('添加时间段筛选:', timeSlot);
+      whereConditions.push({ timeSlot: timeSlot });
+    }
+
     let query = db.collection('matches')
-      .where({
-        status: 'active',
-        date: date ? _.gte(new Date(date).toISOString()) : _.exists(true)
-      })
+      .where(_.and(whereConditions))
       .orderBy('date', 'asc')
       .skip(skip)
       .limit(pageSize)
@@ -32,29 +76,12 @@ exports.main = async (event, context) => {
         recruitCount: true,
         description: true,
         contact: true,
-        status: true // 添加status字段
+        status: true
       })
 
-    // 如果有项目筛选
-    if (project.length > 0) {
-      query = query.where({
-        project: _.in(project)
-      })
-    }
-
-    // 获取总数
+    // 获取总数 - 使用相同的筛选条件
     let countQuery = db.collection('matches')
-      .where({
-        status: 'active',
-        date: date ? _.gte(new Date(date).toISOString()) : _.exists(true)
-      })
-
-    // 如果有项目筛选
-    if (project.length > 0) {
-      countQuery = countQuery.where({
-        project: _.in(project)
-      })
-    }
+      .where(_.and(whereConditions))
 
     const countResult = await countQuery.count()
     const result = await query.get()
@@ -82,15 +109,12 @@ exports.main = async (event, context) => {
           .field({
             _id: true,
             avatarUrl: true,
-            avatar: true,
-            avatar_url: true,
-            headimgurl: true,
-            nickName: true,
             nickname: true,
-            name: true,
             gender: true,
             birthdate: true,
-            level: true
+            level: true,
+            contactType: true,
+            contactValue: true
           })
           .get();
 
@@ -98,9 +122,9 @@ exports.main = async (event, context) => {
 
         userResult.data.forEach(user => {
           // 处理头像URL
-          const avatarUrl = user.avatarUrl || user.avatar || user.avatar_url || user.headimgurl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
+          const avatarUrl = user.avatarUrl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
           // 处理昵称
-          const nickName = user.nickName || user.nickname || user.name || '用户';
+          const nickname = user.nickname || '用户';
 
           // 计算年龄
           function calculateAge(birthdate) {
@@ -148,11 +172,13 @@ exports.main = async (event, context) => {
 
           userInfos[user._id] = {
             avatarUrl: avatarUrl,
-            nickName: nickName,
+            nickname: nickname,
             gender: user.gender || '',
             birthdate: user.birthdate || '',
             age: calculateAge(user.birthdate) ?? '',
-            level: user.level || ''
+            level: user.level || '',
+            contactType: user.contactType || '',
+            contactValue: user.contactValue || ''
           };
         });
       } catch (error) {
@@ -165,11 +191,13 @@ exports.main = async (event, context) => {
           if (!userInfos[uid]) {
             userInfos[uid] = {
               avatarUrl: 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg',
-              nickName: '用户',
+              nickname: '用户',
               gender: '',
               birthdate: '',
               age: '',
-              level: ''
+              level: '',
+              contactType: '',
+              contactValue: ''
             };
           }
         });
@@ -186,25 +214,29 @@ exports.main = async (event, context) => {
 
       // 补充参与者头像和昵称信息
       const participantsWithAvatar = item.participants.map(participant => {
-        const userInfo = userInfos[participant._id] || {
-          avatarUrl: 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg',
-          nickName: '用户',
-          gender: '',
-          birthdate: '',
-          age: '',
-          level: ''
-        };
-
-        return {
-            ...participant,
-            avatarUrl: participant.avatarUrl || userInfo.avatarUrl,
-            nickName: participant.nickName || userInfo.nickName,
-            gender: participant.gender || userInfo.gender || '',
-            birthdate: participant.birthdate || userInfo.birthdate || '',
-            age: participant.age || userInfo.age || '',
-            level: participant.level || userInfo.level || ''
+          const userInfo = userInfos[participant._id] || {
+            avatarUrl: 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg',
+            nickname: '用户',
+            gender: '',
+            birthdate: '',
+            age: '',
+            level: '',
+            contactType: '',
+            contactValue: ''
           };
-      });
+
+          return {
+              ...participant,
+              avatarUrl: userInfo.avatarUrl,
+              nickname: userInfo.nickname,
+              gender: userInfo.gender || '',
+              birthdate: userInfo.birthdate || '',
+              age: userInfo.age || '',
+              level: userInfo.level || '',
+              contactType: userInfo.contactType || '',
+              contactValue: userInfo.contactValue || ''
+            };
+        });
 
       return {
         ...item,

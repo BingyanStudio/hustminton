@@ -1,7 +1,7 @@
 <!--index.wxml-->
 <view class="top-images">
-  <image class="logo-img" src="/images/华科校徽.jpeg" mode="aspectFit" />
-  <image class="logo-img" src="/images/Image_1752148852453.jpg" mode="aspectFit" />
+  <image class="logo-img" src="cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/illustration/华科校徽.jpeg" mode="aspectFit" />
+  <image class="logo-img" src="cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/illustration/羽协.jpg" mode="aspectFit" />
 </view>
 <view class="container">
   <view class="filter-grid">
@@ -98,16 +98,16 @@
       <input class="profile-input" value="{{profileUser.nickName || profileUser.name}}" disabled />
     </view>
     <view class="profile-row">
+      <view class="profile-label">联系方式</view>
+      <input class="profile-input" value="{{profileUser.phone || profileUser.contact || '未设置'}}" disabled />
+    </view>
+    <view class="profile-row">
       <view class="profile-label">性别</view>
       <input class="profile-input" value="{{profileUser.gender || '未知'}}" disabled />
     </view>
     <view class="profile-row">
       <view class="profile-label">等级</view>
       <input class="profile-input" value="{{profileUser.level || '未知'}}" disabled />
-    </view>
-    <view class="profile-row">
-      <view class="profile-label">生日</view>
-      <input class="profile-input" value="{{profileUser.birthdate || '未知'}}" disabled />
     </view>
     <view class="profile-row">
       <view class="profile-label">年龄</view>

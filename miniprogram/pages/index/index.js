@@ -51,7 +51,9 @@ Page({
   },
 
   onShow() {
-    this.loadMatchList();
+    console.log('Index页面显示，当前matchList长度:', this.data.matchList.length);
+    // 每次显示页面时刷新数据，避免重复
+    this.loadMatchList(true);
     // 检查通知
     this.checkNotifications();
   },
@@ -121,36 +123,59 @@ Page({
 
   // 加载约球列表（云端）
   async loadMatchList(refresh = false) {
-    if (this.data.loading) return;
+    console.log(`开始加载数据，refresh: ${refresh}, 当前matchList长度: ${this.data.matchList.length}`);
+    if (this.data.loading) {
+      console.log('正在加载中，跳过本次请求');
+      return;
+    }
     this.setData({ loading: true });
     if (refresh) {
+      console.log('刷新模式：清空现有数据并重置页码');
       this.setData({ page: 1, matchList: [] });
     }
     // 构建筛选条件
-    const filters = {};
+    const params = {
+      page: this.data.page,
+      pageSize: 10
+    };
+
+    // 添加各种筛选条件
     if (this.data.locationOptions[this.data.locationIndex] !== '不限') {
-      filters.location = this.data.locationOptions[this.data.locationIndex];
+      params.location = this.data.locationOptions[this.data.locationIndex];
     }
     if (this.data.projectOptions[this.data.projectIndex] !== '不限') {
-      filters.project = this.data.projectOptions[this.data.projectIndex];
+      params.project = [this.data.projectOptions[this.data.projectIndex]]; // 转换为数组
     }
     if (this.data.levelOptions[this.data.levelIndex] !== '不限') {
-      filters.level = this.data.levelOptions[this.data.levelIndex];
+      params.level = this.data.levelOptions[this.data.levelIndex];
     }
     if (this.data.selectedDate) {
-      filters.date = this.data.selectedDate;
+      params.date = this.data.selectedDate;
     }
     if (this.data.selectedTimeSlot && this.data.selectedTimeSlot !== '不限') {
-      filters.timeSlot = this.data.selectedTimeSlot;
+      params.timeSlot = this.data.selectedTimeSlot;
     }
-    const page = this.data.page;
-    const pageSize = 10;
+
+    console.log('发送到云函数的参数:', params);
+
     try {
-      const res = await cloudService.callFunction('getMatchList', { page, pageSize, filters });
+      const res = await cloudService.callFunction('getMatchList', params);
       console.log('云函数返回的原始数据:', res);
 
       let matchList = refresh ? res.list : [...this.data.matchList, ...res.list];
       console.log('合并后的原始matchList:', matchList);
+
+      // 去除重复项（基于_id）
+      const uniqueMatchList = [];
+      const seenIds = new Set();
+      for (const item of matchList) {
+        if (!seenIds.has(item._id)) {
+          seenIds.add(item._id);
+          uniqueMatchList.push(item);
+        }
+      }
+      matchList = uniqueMatchList;
+      console.log('去重后的matchList:', matchList);
 
       // 添加满员判断逻辑和时间判断逻辑
       matchList = matchList
@@ -169,12 +194,14 @@ Page({
           };
         })
         .filter(item => {
-          // index页面特殊逻辑：status为active或者时间未结束的活动都显示
+          // index页面逻辑：只显示状态为active或时间未结束的活动
           const shouldShow = item.status === 'active' || !item.isFinished;
           console.log(`活动 ${item._id} 过滤结果:`, {
             status: item.status,
             isFinished: item.isFinished,
-            shouldShow: shouldShow
+            shouldShow: shouldShow,
+            date: item.date,
+            timeSlot: item.timeSlot
           });
           return shouldShow;
         });
@@ -192,6 +219,8 @@ Page({
         loading: false,
         hasMore: res.hasMore
       });
+
+      console.log(`数据加载完成，最终matchList长度: ${matchList.length}, hasMore: ${res.hasMore}`);
     } catch (e) {
       this.setData({ loading: false });
       wx.showToast({ title: '加载失败', icon: 'none' });
@@ -208,20 +237,11 @@ Page({
 
     let user = null;
     for (const match of this.data.matchList) {
-      // 在people数组中查找用户，使用_id字段
-      user = (match.people || []).find(p => p._id == id);
+      // 在participants数组中查找用户，使用_id字段
+      user = (match.participants || []).find(p => p._id == id || p.userId == id);
       if (user) {
         console.log('找到用户信息:', user);
         break;
-      }
-
-      // 如果people中没找到，也在participants中查找（兼容性）
-      if (!user) {
-        user = (match.participants || []).find(p => p._id == id || p.userId == id);
-        if (user) {
-          console.log('在participants中找到用户信息:', user);
-          break;
-        }
       }
     }
 
@@ -236,11 +256,6 @@ Page({
     this.setData({ showProfileModal: false });
   },
 
-  // 测试日期选择器方法
-  testDatePicker() {
-    console.log('Testing date picker method');
-    this.onDatePickerChange({ detail: { value: '2023-12-25' } });
-  },
 
   // 约球详情、加入、加载更多、发布等函数保持不变...
   onMatchDetail(e) {
@@ -293,7 +308,11 @@ Page({
             wx.showLoading({ title: '加入中...' });
             await cloudService.callFunction('join', { matchId: id });
             wx.hideLoading();
-            wx.showToast({ title: '加入成功', icon: 'success' });
+            // 使用showModal实现带小字的提示
+            wx.showModal({
+              title: '加入成功',
+              content: '可在“我参与的”退出',
+            });
 
             // 重新加载数据以更新状态
             this.loadMatchList(true);

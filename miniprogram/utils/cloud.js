@@ -165,16 +165,18 @@ class CloudService {
   initDatabase = {
     // 初始化所有内容
     initAll: () => this.callFunction('initDatabase', { type: 'initAll' }),
-    
+
     // 初始化集合
     initCollections: () => this.callFunction('initDatabase', { type: 'initCollections' }),
-    
+
     // 创建索引
     createIndexes: () => this.callFunction('initDatabase', { type: 'createIndexes' }),
-    
+
     // 插入示例数据
     insertSampleData: () => this.callFunction('initDatabase', { type: 'insertSampleData' })
   }
+
+
 }
 
 // 创建全局云服务实例

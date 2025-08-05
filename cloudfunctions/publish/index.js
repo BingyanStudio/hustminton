@@ -10,6 +10,10 @@ const {date, timeSlot, dateText, location, project, level, playerCount, recruitC
 // 确保playerCount是数字类型
 const numPlayerCount = parseInt(playerCount)
 
+// 对description和contact做长度限制
+const limitedDescription = description ? description.substring(0, 500) : ''
+const limitedContact = contact ? contact.substring(0, 100) : ''
+
   try {
     // 查询发布者用户信息获取头像和昵称
     let avatarUrl = 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg'
@@ -19,9 +23,9 @@ const numPlayerCount = parseInt(playerCount)
       const userResult = await db.collection('users').doc(OPENID).get()
       if (userResult.data) {
         const userInfo = userResult.data
-        // 尝试多种可能的头像字段名
-        avatarUrl = userInfo.avatarUrl || userInfo.avatar || userInfo.avatar_url || userInfo.headimgurl || avatarUrl
-        nickName = userInfo.nickName || userInfo.nickname || userInfo.name || nickName
+        // 获取头像和昵称
+        avatarUrl = userInfo.avatarUrl || avatarUrl
+        nickName = userInfo.nickname || nickName
         console.log('查询到发布者信息:', { avatarUrl, nickName })
       }
     } catch (userError) {
@@ -45,7 +49,7 @@ const numPlayerCount = parseInt(playerCount)
     const publisherInfo = {
       _id: OPENID,
       isPublisher: true,
-      joinTime: new Date(),
+      joinTime: db.serverDate(),
       avatarUrl: avatarUrl,
       nickName: nickName
     }
@@ -60,15 +64,13 @@ const numPlayerCount = parseInt(playerCount)
       project,
       level,
       playerCount: numPlayerCount,
-      description,
-      contact,
+      description: limitedDescription,
+      contact: limitedContact,
       publisher: OPENID,
       participants: [publisherInfo],
-      people: [publisherInfo],
       recruitCount: parseInt(recruitCount) || 0,
-      status: 'active',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate()
       }
     })
 

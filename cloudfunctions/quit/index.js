@@ -42,17 +42,14 @@ exports.main = async (event, context) => {
 
     // 4. 创建新的参与者列表（移除当前用户）
     const newParticipants = matchData.participants.filter(p => p._id !== OPENID)
-    const newPeople = matchData.people ? matchData.people.filter(p => p._id !== OPENID) : newParticipants
 
     console.log('🔄 更新后的列表:')
     console.log('- 新参与者数量:', newParticipants.length)
-    console.log('- 新people数量:', newPeople.length)
 
     // 5. 更新数据库 - 使用完整替换
     const updateData = {
       ...matchData,
       participants: newParticipants,
-      people: newPeople,
       updatedAt: new Date()
     }
 
@@ -74,28 +71,33 @@ exports.main = async (event, context) => {
       try {
         const userResult = await db.collection('users').doc(OPENID).get()
         if (userResult.data) {
-          nickName = userResult.data.nickName || userResult.data.nickname || nickName
-          avatarUrl = userResult.data.avatarUrl || userResult.data.avatar || avatarUrl
+          nickName = userResult.data.nickname || nickName
+          avatarUrl = userResult.data.avatarUrl || avatarUrl
         }
       } catch (userError) {
         console.log('获取用户信息失败，使用默认值')
       }
 
-      await db.collection('notifications').add({
-        data: {
-          type: 'quit', // 退出通知
-          matchId: matchId,
-          matchTitle: matchData.title,
-          publisherId: matchData.publisher, // 活动发布者
-          participantId: OPENID, // 参与者
-          participantName: nickName,
-          participantAvatar: avatarUrl,
-          message: `${nickName} 退出了您的活动`,
-          isRead: false,
-          createTime: db.serverDate()
-        }
-      })
-      console.log('创建退出通知成功')
+      const notificationData = {
+        type: 'quit', // 退出通知
+        matchId: matchId,
+        matchTitle: matchData.title,
+        publisherId: matchData.publisher, // 活动发布者
+        participantId: OPENID, // 参与者
+        participantName: nickName,
+        participantAvatar: avatarUrl,
+        message: `${nickName} 退出了您的活动`,
+        isRead: false,
+        createTime: db.serverDate()
+      };
+
+      console.log('准备创建退出通知，数据:', notificationData);
+
+      const notificationResult = await db.collection('notifications').add({
+        data: notificationData
+      });
+
+      console.log('创建退出通知成功，通知ID:', notificationResult._id)
     } catch (notificationError) {
       console.error('创建通知失败:', notificationError)
       // 不影响主流程，继续执行

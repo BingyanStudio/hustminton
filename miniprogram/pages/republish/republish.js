@@ -317,7 +317,6 @@ Page({
       } else {
         // 新建模式：调用发布云函数
         matchData.createTime = new Date().toISOString();
-        matchData.status = 'active';
 
         await cloudService.callFunction('publish', { matchData });
         wx.showToast({

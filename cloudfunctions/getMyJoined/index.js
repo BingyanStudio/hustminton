@@ -10,25 +10,58 @@ exports.main = async (event, context) => {
 
   try {
     console.log('开始查询用户参与的活动，OPENID:', OPENID);
-    // 查询用户参与的活动（包含用户ID在participants中的所有活动）
+
+    // 查询所有活动，不限制状态，然后在代码中过滤
     const result = await db.collection('matches')
-      .where({
-        'participants._id': OPENID,
-        status: dbCmd.in(['active', 'finished'])
-      })
       .orderBy('date', 'desc')
+      .limit(100) // 增加查询限制到100条
       .get()
 
     console.log('查询成功，返回记录数:', result.data.length);
     console.log('查询到的原始数据:', result.data.length, '条记录')
 
+    // 打印所有活动的状态，用于调试
+    result.data.forEach((item, index) => {
+      console.log(`活动${index + 1}:`, {
+        id: item._id,
+        title: item.title,
+        status: item.status,
+        participantsCount: item.participants ? item.participants.length : 0,
+        hasCurrentUser: item.participants ? item.participants.some(p => p._id === OPENID) : false
+      });
+    });
+
+    // 在代码中过滤包含当前用户的活动
+    const userActivities = result.data.filter(item => {
+      if (!item.participants || !Array.isArray(item.participants)) {
+        return false;
+      }
+
+      // 检查participants数组中是否包含当前用户
+      const hasUser = item.participants.some(participant => {
+        if (!participant || !participant._id) {
+          return false;
+        }
+        return participant._id === OPENID;
+      });
+
+      if (hasUser) {
+        console.log('找到用户参与的活动:', item._id, '参与者:', item.participants.map(p => p._id));
+      }
+
+      return hasUser;
+    });
+
+    console.log('用户参与的活动数量:', userActivities.length);
+
     // 过滤掉用户作为发布者的活动，只保留用户作为参与者的活动
-    const filteredData = result.data.filter(item => {
+    const filteredData = userActivities.filter(item => {
       // 查找当前用户在participants中的记录
-      const userParticipant = item.participants.find(p => p._id === OPENID)
+      const userParticipant = item.participants.find(p => p && p._id === OPENID)
 
       // 如果找到用户记录，检查isPublisher字段
       if (userParticipant) {
+        console.log('用户在活动中的角色:', item._id, 'isPublisher:', userParticipant.isPublisher);
         // 只返回isPublisher为false或者不存在isPublisher字段的记录
         // 这样可以排除用户作为发布者的活动
         return !userParticipant.isPublisher
@@ -63,23 +96,20 @@ exports.main = async (event, context) => {
           .field({
             _id: true,
             avatarUrl: true,
-            avatar: true,
-            avatar_url: true,
-            headimgurl: true,
-            nickName: true,
             nickname: true,
-            name: true,
             gender: true,
             birthdate: true,
-            level: true
+            level: true,
+            contactType: true,
+            contactValue: true
           })
           .get();
 
         userResult.data.forEach(user => {
           // 处理头像URL
-          const avatarUrl = user.avatarUrl || user.avatar || user.avatar_url || user.headimgurl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
+          const avatarUrl = user.avatarUrl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
           // 处理昵称
-          const nickName = user.nickName || user.nickname || user.name || '未知用户';
+          const nickname = user.nickname || '未知用户';
 
           // 计算年龄
           function calculateAge(birthdate) {
@@ -122,11 +152,13 @@ exports.main = async (event, context) => {
 
           userInfos[user._id] = {
             avatarUrl: avatarUrl,
-            nickName: nickName,
+            nickname: nickname,
             gender: user.gender || '',
             birthdate: user.birthdate || '',
             age: calculateAge(user.birthdate) ?? '',
-            level: user.level || ''
+            level: user.level || '',
+            contactType: user.contactType || '',
+            contactValue: user.contactValue || ''
           };
         });
       } catch (error) {
@@ -139,11 +171,13 @@ exports.main = async (event, context) => {
       if (!userInfos[uid]) {
         userInfos[uid] = {
             avatarUrl: 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg',
-            nickName: '未知用户',
+            nickname: '未知用户',
             gender: '',
             birthdate: '',
             age: '',
-            level: ''
+            level: '',
+            contactType: '',
+            contactValue: ''
           };
       }
     });
@@ -178,25 +212,27 @@ exports.main = async (event, context) => {
     }
 
     // 合并用户信息到参与者数据中
-    const formattedData = filteredData.map(item => {
-      const participantsWithInfo = (item.participants || []).map(participant => {
-        const userInfo = userInfos[participant._id] || {};
-        return {
-            ...participant,
-            avatarUrl: userInfo.avatarUrl,
-            nickName: userInfo.nickName,
-            gender: userInfo.gender,
-            birthdate: userInfo.birthdate,
-            age: userInfo.age,
-            level: userInfo.level
-          };
-      });
+        const formattedData = filteredData.map(item => {
+          const participantsWithInfo = (item.participants || []).map(participant => {
+            const userInfo = userInfos[participant._id] || {};
+            return {
+                ...participant,
+                avatarUrl: userInfo.avatarUrl,
+                nickname: userInfo.nickname,
+                gender: userInfo.gender,
+                birthdate: userInfo.birthdate,
+                age: userInfo.age,
+                level: userInfo.level,
+                contactType: userInfo.contactType || '',
+                contactValue: userInfo.contactValue || ''
+              };
+          });
 
-      return {
-        ...item,
-        participants: participantsWithInfo
-      };
-    });
+          return {
+            ...item,
+            participants: participantsWithInfo
+          };
+        });
 
     // 根据时间判断分离进行中和已结束的活动
     const ongoingList = formattedData.filter(item => !isMatchFinished(item))

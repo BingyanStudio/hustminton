@@ -69,7 +69,7 @@
   background-color: #fafafa;
   display: flex;
   align-items: center;
-  color: #666;
+  color: #999;
 }
 
 .picker.time-picker {
@@ -83,6 +83,7 @@
   margin-top: 10rpx;
   position: relative;
   overflow: visible;
+  color: #999;
 }
 .picker-inner {
   width: 100%;
@@ -91,9 +92,17 @@
   align-items: center;
   justify-content: flex-start;
   font-size: 28rpx;
-  color: #333;
+  color: #000;
   box-sizing: border-box;
   padding-left: 20rpx;
+}
+
+/* 未选择状态的提示文字 */
+.picker { color: #999; }
+
+/* 选择后的文本颜色 - 针对picker内的内容 */
+.picker[data-selected='true'] {
+  color: #000 !important;
 }
 .time-slot-list {
   display: flex;

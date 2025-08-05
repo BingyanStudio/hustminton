@@ -43,23 +43,20 @@ exports.main = async (event, context) => {
           .field({
             _id: true,
             avatarUrl: true,
-            avatar: true,
-            avatar_url: true,
-            headimgurl: true,
-            nickName: true,
             nickname: true,
-            name: true,
             gender: true,
             birthdate: true,
-            level: true
+            level: true,
+            contactType: true,
+            contactValue: true
           })
           .get();
 
         userResult.data.forEach(user => {
           // 处理头像URL
-          const avatarUrl = user.avatarUrl || user.avatar || user.avatar_url || user.headimgurl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
+          const avatarUrl = user.avatarUrl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg';
           // 处理昵称
-          const nickName = user.nickName || user.nickname || user.name || '未知用户';
+          const nickname = user.nickname || '未知用户';
 
           // 计算年龄
           function calculateAge(birthdate) {
@@ -86,11 +83,13 @@ exports.main = async (event, context) => {
 
           userInfos[user._id] = {
             avatarUrl: avatarUrl,
-            nickName: nickName,
+            nickname: nickname,
             gender: user.gender || '',
             birthdate: user.birthdate || '',
             age: calculateAge(user.birthdate) || '',
-            level: user.level || ''
+            level: user.level || '',
+            contactType: user.contactType || '',
+            contactValue: user.contactValue || ''
           };
         });
       } catch (error) {
@@ -103,11 +102,13 @@ exports.main = async (event, context) => {
       if (!userInfos[uid]) {
         userInfos[uid] = {
             avatarUrl: 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg',
-            nickName: '未知用户',
+            nickname: '未知用户',
             gender: '',
             birthdate: '',
             age: '',
-            level: ''
+            level: '',
+            contactType: '',
+            contactValue: ''
           };
       }
     });
@@ -142,36 +143,40 @@ exports.main = async (event, context) => {
     }
 
     // 合并用户信息到发布者和参与者数据中
-    const formattedData = result.data.map(item => {
-      // 处理发布者信息
-      const publisherInfo = userInfos[item.publisher] || {};
-      // 处理参与者信息
-      const participantsWithInfo = (item.participants || []).map(participant => {
-        const userInfo = userInfos[participant._id] || {};
-        return {
-            ...participant,
-            avatarUrl: userInfo.avatarUrl,
-            nickName: userInfo.nickName,
-            gender: userInfo.gender,
-            birthdate: userInfo.birthdate,
-            age: userInfo.age,
-            level: userInfo.level
-          };
-      });
+        const formattedData = result.data.map(item => {
+          // 处理发布者信息
+          const publisherInfo = userInfos[item.publisher] || {};
+          // 处理参与者信息
+          const participantsWithInfo = (item.participants || []).map(participant => {
+            const userInfo = userInfos[participant._id] || {};
+            return {
+                ...participant,
+                avatarUrl: userInfo.avatarUrl,
+                nickname: userInfo.nickname,
+                gender: userInfo.gender,
+                birthdate: userInfo.birthdate,
+                age: userInfo.age,
+                level: userInfo.level,
+                contactType: userInfo.contactType || '',
+                contactValue: userInfo.contactValue || ''
+              };
+          });
 
-      return {
-        ...item,
-        publisherInfo: {
-          avatarUrl: publisherInfo.avatarUrl,
-          nickName: publisherInfo.nickName,
-          gender: publisherInfo.gender,
-          birthdate: publisherInfo.birthdate,
-          age: publisherInfo.age,
-          level: publisherInfo.level
-        },
-        participants: participantsWithInfo
-      };
-    });
+          return {
+            ...item,
+            publisherInfo: {
+              avatarUrl: publisherInfo.avatarUrl,
+              nickName: publisherInfo.nickName,
+              gender: publisherInfo.gender,
+              birthdate: publisherInfo.birthdate,
+              age: publisherInfo.age,
+              level: publisherInfo.level,
+              contactType: publisherInfo.contactType || '',
+              contactValue: publisherInfo.contactValue || ''
+            },
+            participants: participantsWithInfo
+          };
+        });
 
     // 根据时间判断分离进行中和已结束的活动
     const ongoingList = formattedData.filter(item => !isMatchFinished(item));

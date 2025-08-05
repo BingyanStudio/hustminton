@@ -1,35 +1,12 @@
 <view class="profile-container">
   <view class="top-section">
     <view class="avatar-wrapper">
-      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" bindtap="onAvatarUpload" mode="aspectFill" />
+      <image class="avatar" src="{{userInfo.avatarUrl || 'cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/avatar/默认头像.jpg'}}" bindtap="onAvatarUpload" mode="aspectFill" />
     </view>
   </view>
   <view class="bottom-section">
-    <!-- 个人信息显示区域 -->
-    <view class="info-section">
-      <view class="info-title">个人信息</view>
-      <view class="info-list">
-        <view class="info-item">
-          <text class="info-label">昵称</text>
-          <text class="info-value">{{userInfo.nickname || '未知'}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">性别</text>
-          <text class="info-value">{{userInfo.gender || '未知'}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">等级</text>
-          <text class="info-value">{{userInfo.level || '未知'}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">年龄</text>
-          <text class="info-value">{{userInfo.age || '未知'}}</text>
-        </view>
-      </view>
-    </view>
-
     <view class="menu-list">
-      <button class="menu-btn" bindtap="onProfileInfo">编辑个人信息</button>
+      <button class="menu-btn" bindtap="onProfileInfo">个人信息</button>
       <button class="menu-btn menu-btn-with-badge" bindtap="onMyPublished">
         我发布的
         <view class="notification-badge" wx:if="{{myPublishedNotificationCount > 0}}">
@@ -37,6 +14,8 @@
         </view>
       </button>
       <button class="menu-btn" bindtap="onMyJoined">我参加的</button>
+      <button class="menu-btn" bindtap="onFeedback">意见反馈</button>
+      <button class="menu-btn logout-btn" bindtap="onLogout">退出登录</button>
     </view>
   </view>
 </view>
@@ -62,8 +41,69 @@
       </picker>
     </view>
   <view class="popup-item">
-    <text>等级</text>
+    <view class="label-with-help">
+      <text>等级</text>
+      <view class="help-icon" bindtap="onShowLevelHelp">?</view>
+    </view>
     <input class="popup-input" value="{{editLevel}}" placeholder="例如：1.5" bindinput="onLevelInput" />
   </view>
+  <view class="popup-item">
+    <picker mode="selector" range="{{contactOptions}}" value="{{contactIndex}}" bindchange="onContactTypeChange">
+      <view class="selectable-text-container">
+        <text class="selectable-text-content">{{contactOptions[contactIndex] || '联系方式'}}</text>
+        <text class="triangle-down"></text>
+      </view>
+    </picker>
+    <input class="popup-input" value="{{editContactValue}}" placeholder="请选择一项您愿意公开的联系方式" bindinput="onContactValueInput" type="{{contactIndex === 0 ? 'number' : 'text'}}" maxlength="{{contactIndex === 0 ? 11 : (contactIndex === 1 ? 11 : 20)}}"/>
+  </view>
   <button class="popup-btn" bindtap="onProfileSave">保存</button>
+</view>
+
+<!-- 意见反馈弹窗 -->
+<view class="feedback-modal" wx:if="{{showFeedbackModal}}">
+  <view class="feedback-mask" bindtap="onCloseFeedback"></view>
+  <view class="feedback-content">
+    <view class="feedback-header">
+      <text class="feedback-title">意见反馈</text>
+      <view class="feedback-close" bindtap="onCloseFeedback">✕</view>
+    </view>
+
+    <view class="feedback-body">
+      <view class="feedback-item">
+        <text class="feedback-label">联系方式（可选）</text>
+        <input class="feedback-input" placeholder="请输入您的联系方式" value="{{feedbackContact}}" bindinput="onContactInput" />
+      </view>
+
+      <view class="feedback-item">
+        <text class="feedback-label">反馈内容</text>
+        <textarea class="feedback-textarea" placeholder="请详细描述您的问题或建议，我们会认真对待每一条反馈" value="{{feedbackContent}}" bindinput="onContentInput" maxlength="500" auto-height></textarea>
+        <view class="feedback-count">{{feedbackContent.length}}/500</view>
+      </view>
+    </view>
+
+    <view class="feedback-footer">
+      <button class="feedback-btn cancel" bindtap="onCloseFeedback">取消</button>
+      <button class="feedback-btn submit" bindtap="onSubmitFeedback" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">提交</button>
+    </view>
+  </view>
+</view>
+
+<!-- 等级说明弹窗 -->
+<view class="level-help-modal" wx:if="{{showLevelHelp}}" bindtap="onCloseLevelHelp">
+  <view class="level-help-content" catchtap="stopPropagation">
+    <view class="level-help-header">
+      <text class="level-help-title">羽毛球等级说明</text>
+      <view class="close-btn" bindtap="onCloseLevelHelp">×</view>
+    </view>
+    <view class="level-help-text">
+      <view class="level-item">0.5级:知道比赛详细规则。会发正手高远球或反手网前并且有一半几率发到后场或过网。基本知道正手高远球动作并且一半几率能打过网。</view>
+      <view class="level-item">1级:大概掌握正手基础动作但较为粗糙（高远，杀球，吊球，放网等）。杀球有一半几率过网。吊球、放网75%能过网。步伐没有或凌乱。</view>
+      <view class="level-item">1.25级:发力较为规范。主动情况下对球落点有一定控制。主动情况75%以上高远球能击打到对方后场。步伐基本没有或较为凌乱</view>
+      <view class="level-item">1.5级:基本动作熟练，主动情况下对球落点控制较好。掌握劈杀、劈吊、滑板、勾对角等进阶技术。掌握部分前后场移动的步法，但回位慢，启动步时有时无。</view>
+      <view class="level-item">1.75级:有明确启动步。进攻能保持连贯。等级接近下具有一定得分手段，如杀球快、进攻多变、网前技术好等。</view>
+      <view class="level-item">2级:全场步伐较熟练，有变速突击能力。发力规范。反手过渡较稳定。有一定被动挣扎能力。</view>
+      <view class="level-item">3级:全场步伐熟练。各种技术娴熟。有组织球路意识。</view>
+      <view class="level-note">注：熟练双打套路和发接发，可以适当向上组双打球局</view>
+    </view>
+  </view>
 </view>

@@ -53,9 +53,9 @@ exports.main = async (event, context) => {
       const userResult = await db.collection('users').doc(OPENID).get()
       if (userResult.data) {
         userInfo = userResult.data
-        // 尝试多种可能的头像字段名
-        avatarUrl = userInfo.avatarUrl || userInfo.avatar || userInfo.avatar_url || userInfo.headimgurl || avatarUrl
-        nickName = userInfo.nickName || userInfo.nickname || userInfo.name || nickName
+        // 获取头像和昵称
+        avatarUrl = userInfo.avatarUrl || avatarUrl
+        nickName = userInfo.nickname || nickName
         console.log('查询到用户信息:', { avatarUrl, nickName })
       }
     } catch (userError) {
@@ -94,21 +94,26 @@ exports.main = async (event, context) => {
 
     // 创建通知给活动发布者
     try {
-      await db.collection('notifications').add({
-        data: {
-          type: 'join', // 加入通知
-          matchId: matchId,
-          matchTitle: match.data.title,
-          publisherId: match.data.publisher, // 活动发布者
-          participantId: OPENID, // 参与者
-          participantName: nickName,
-          participantAvatar: avatarUrl,
-          message: `${nickName} 加入了您的活动`,
-          isRead: false,
-          createTime: db.serverDate()
-        }
-      })
-      console.log('创建加入通知成功')
+      const notificationData = {
+        type: 'join', // 加入通知
+        matchId: matchId,
+        matchTitle: match.data.title,
+        publisherId: match.data.publisher, // 活动发布者
+        participantId: OPENID, // 参与者
+        participantName: nickName,
+        participantAvatar: avatarUrl,
+        message: `${nickName} 加入了您的活动`,
+        isRead: false,
+        createTime: db.serverDate()
+      };
+
+      console.log('准备创建通知，数据:', notificationData);
+
+      const notificationResult = await db.collection('notifications').add({
+        data: notificationData
+      });
+
+      console.log('创建加入通知成功，通知ID:', notificationResult._id);
     } catch (notificationError) {
       console.error('创建通知失败:', notificationError)
       // 不影响主流程，继续执行

@@ -219,7 +219,7 @@ page {
 .profile-modal {
   background: #fff;
   border-radius: 18rpx;
-  min-width: 420rpx;
+  min-width: 520rpx;
   max-width: 90vw;
   padding: 40rpx 32rpx 32rpx 32rpx;
   box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.12);
@@ -242,7 +242,7 @@ page {
 }
 
 .profile-label {
-  width: 100rpx;
+  width: 120rpx;
   font-size: 26rpx;
   color: #333;
 }

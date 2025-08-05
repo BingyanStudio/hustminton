@@ -12,11 +12,12 @@ exports.main = async (event, context) => {
   const openid = wxContext.OPENID
 
   try {
-    // 获取用户发布的所有活动
+    // 获取用户发布的所有活动（注意字段名是publisher，不是publisherId）
     const myPublishedResult = await db.collection('matches').where({
-      publisherId: openid,
-      status: 'active'
+      publisher: openid
     }).get()
+
+    console.log('查询到的我发布的活动数量:', myPublishedResult.data.length)
 
     let totalNewNotifications = 0
 
@@ -29,8 +30,11 @@ exports.main = async (event, context) => {
         isRead: false
       }).get()
 
+      console.log(`活动 ${match._id} 的未读通知数量:`, notificationResult.data.length)
       totalNewNotifications += notificationResult.data.length
     }
+
+    console.log('总未读通知数量:', totalNewNotifications)
 
     return {
       success: true,

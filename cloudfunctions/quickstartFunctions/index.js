@@ -148,11 +148,50 @@ const updateUserInfo = async (event) => {
   if (!userInfo) {
     throw new Error('User information is missing')
   }
+
   const wxContext = cloud.getWXContext()
+
+  // 准备保存的用户信息字段
+const filteredUserInfo = {}
+
+// 保留必要的用户信息字段
+if (userInfo.nickname) {
+  filteredUserInfo.nickname = userInfo.nickname
+}
+if (userInfo.gender) {
+  filteredUserInfo.gender = userInfo.gender
+}
+if (userInfo.birthdate) {
+  filteredUserInfo.birthdate = userInfo.birthdate
+}
+if (userInfo.level) {
+  filteredUserInfo.level = userInfo.level
+}
+// 确保contactType和contactValue总是被保存，即使为空字符串
+filteredUserInfo.contactType = userInfo.contactType || '';
+filteredUserInfo.contactValue = userInfo.contactValue || '';
+
+// 兼容旧版phoneNumber字段
+if (userInfo.phoneNumber) {
+  filteredUserInfo.phoneNumber = userInfo.phoneNumber
+}
+
+  // 保留自定义头像（如果不是微信头像）
+  if (userInfo.avatarUrl && !userInfo.avatarUrl.includes('thirdwx.qlogo.cn') && !userInfo.avatarUrl.includes('wx.qlogo.cn')) {
+    filteredUserInfo.avatarUrl = userInfo.avatarUrl
+  }
+
+  console.log('保存用户信息:', filteredUserInfo)
+
+  // 使用merge: true只更新提供的字段，不覆盖原有数据
   await db.collection('users').doc(wxContext.OPENID).set({
     data: {
-      ...userInfo
-    }
+      ...filteredUserInfo,
+      updatedAt: new Date(),
+      // 确保用户记录存在，如果是新用户则创建
+      createdAt: db.serverDate()
+    },
+    merge: true
   })
   return { success: true }
 }
@@ -192,8 +231,137 @@ const login = async (event) => {
     throw new Error('User information is missing')
   }
 
-  // 直接调用updateUserInfo来创建或更新用户记录
-  return await updateUserInfo(event)
+  const wxContext = cloud.getWXContext()
+  console.log('用户登录，OPENID:', wxContext.OPENID)
+  console.log('用户信息:', userInfo)
+
+  // 处理手机号信息
+  let phoneNumber = null
+  if (userInfo.phoneInfo) {
+    try {
+      // 如果有cloudID，使用云函数解密获取手机号
+      if (userInfo.phoneInfo.cloudID) {
+        console.log('使用cloudID获取手机号:', userInfo.phoneInfo.cloudID)
+        // 调用云开发API解密手机号
+        const phoneResult = await cloud.getOpenData({
+          list: [userInfo.phoneInfo.cloudID],
+        })
+        // 提取解密后的手机号
+        if (phoneResult.list && phoneResult.list.length > 0 && phoneResult.list[0].data) {
+          phoneNumber = phoneResult.list[0].data.phoneNumber
+          console.log('成功获取手机号:', phoneNumber)
+        } else {
+          console.error('解密手机号失败: 未获取到有效数据')
+        }
+      } else if (userInfo.phoneInfo.encryptedData && userInfo.phoneInfo.iv) {
+        console.log('收到加密的手机号数据，需要解密')
+        // 这里需要解密手机号，暂时先记录
+        phoneNumber = 'encrypted_phone_data'
+      }
+    } catch (error) {
+      console.error('处理手机号信息失败:', error)
+    }
+  }
+
+  // 准备保存的用户信息 - 只保留必要字段
+  const saveUserInfo = {}
+
+  // 保留非微信头像（如果有）
+  if (userInfo.avatarUrl && !userInfo.avatarUrl.includes('thirdwx.qlogo.cn') && !userInfo.avatarUrl.includes('wx.qlogo.cn')) {
+    saveUserInfo.avatarUrl = userInfo.avatarUrl
+  }
+
+  // 如果有手机号，添加到用户信息中
+  if (phoneNumber) {
+    saveUserInfo.phoneNumber = phoneNumber
+  }
+
+  // 调用updateUserInfo来创建或更新用户记录
+  const result = await updateUserInfo({ userInfo: saveUserInfo })
+
+  console.log('用户登录完成')
+  return result
+}
+
+// 保存用户反馈
+const saveFeedback = async (event) => {
+  const wxContext = cloud.getWXContext()
+  const { feedbackType, contact, content, userInfo, timestamp } = event
+  const type = feedbackType || '用户反馈'
+
+  try {
+    console.log('收到用户反馈:', {
+      type,
+      contact,
+      content,
+      userInfo,
+      userId: wxContext.OPENID,
+      timestamp
+    })
+
+    const db = cloud.database()
+
+    // 准备反馈数据
+    const feedbackData = {
+      type: type || '用户反馈',
+      contact: contact || '',
+      content: content,
+      userInfo: {
+        nickName: userInfo?.nickName || '匿名用户',
+        avatarUrl: userInfo?.avatarUrl || ''
+      },
+      userId: wxContext.OPENID,
+      timestamp: timestamp || new Date().toISOString(),
+      status: 'pending',
+      createTime: new Date(),
+      _openid: wxContext.OPENID
+    }
+
+    // 保存到数据库（如果集合不存在会自动创建）
+    const result = await db.collection('feedback').add({
+      data: feedbackData
+    })
+
+    console.log('反馈保存成功:', result)
+
+    // 在控制台输出格式化的反馈信息
+    console.log('📧 新的用户反馈')
+    console.log('====================================================')
+    console.log(`反馈类型: ${feedbackData.type}`)
+    console.log(`用户昵称: ${feedbackData.userInfo.nickName}`)
+    console.log(`用户ID: ${feedbackData.userId}`)
+    console.log(`联系方式: ${feedbackData.contact || '未提供'}`)
+    console.log(`反馈时间: ${new Date(feedbackData.timestamp).toLocaleString('zh-CN')}`)
+    console.log(`反馈内容: ${feedbackData.content}`)
+    console.log('====================================================')
+
+    // 立即返回成功响应（不等待邮件发送）
+    const response = {
+      success: true,
+      message: '反馈提交成功，我们会尽快处理您的反馈',
+      data: {
+        id: result._id,
+        timestamp: feedbackData.createTime
+      }
+    }
+
+    // 暂时禁用邮件发送，确保反馈功能稳定
+    console.log('📧 邮件发送功能暂时禁用')
+    console.log('💡 反馈信息已完整记录，可通过以下方式查看：')
+    console.log('   1. 云函数日志（当前方式）')
+    console.log('   2. 云数据库 feedback 集合')
+    console.log('📋 完整反馈信息已记录到日志和数据库中')
+
+    return response
+
+  } catch (error) {
+    console.error('保存反馈失败:', error)
+    return {
+      success: false,
+      message: '反馈提交失败: ' + error.message,
+      error: error.message
+    }
+  }
 }
 
 // const getOpenId = require('./getOpenId/index');
@@ -213,14 +381,6 @@ exports.main = async (event, context) => {
       return await getMiniProgramCode();
     case "createCollection":
       return await createCollection();
-    case "selectRecord":
-      return await selectRecord();
-    case "updateRecord":
-      return await updateRecord(event);
-    case "insertRecord":
-      return await insertRecord(event);
-    case "deleteRecord":
-      return await deleteRecord(event);
     case "joinActivity":
       return await joinActivity(event);
     case "quitActivity":
@@ -233,5 +393,12 @@ exports.main = async (event, context) => {
       return await login(event);
     case "getUserInfo":
       return await getUserInfo(event);
+    case "saveFeedback":
+      return await saveFeedback(event);
+    default:
+      return {
+        success: false,
+        message: `Unknown event type: ${event.type}`
+      };
   }
 };

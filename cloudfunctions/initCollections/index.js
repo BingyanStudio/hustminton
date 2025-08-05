@@ -8,11 +8,11 @@ const db = cloud.database()
 // 云函数入口函数
 exports.main = async (event, context) => {
   try {
-    // 创建activities集合
-    await db.createCollection('activities')
-    console.log('创建activities集合成功')
+    // 创建matches集合
+    await db.createCollection('matches')
+    console.log('创建matches集合成功')
   } catch (e) {
-    console.log('activities集合已存在')
+    console.log('matches集合已存在')
   }
 
   try {

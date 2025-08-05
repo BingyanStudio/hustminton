@@ -1,0 +1,20 @@
+<!--pages/login/login.wxml-->
+<view class="container">
+  <view class="header">
+    <image src="cloud://cloud1-7guleuaib5fb4758.636c-cloud1-7guleuaib5fb4758-1369000957/illustration/羽协.jpg" mode="aspectFit"></image>
+  </view>
+  
+  <view class="content">
+    <text class="title">华科羽毛球约球小程序</text>
+    <text class="desc">一键登录，快速约球</text>
+    <text class="tips">授权后可使用全部功能</text>
+  </view>
+  
+  <view class="bottom">
+    <button class="login-btn" type="primary" open-type="getUserInfo" bind:getuserinfo="handleLogin" loading="{{isLoading}}" disabled="{{isLoading}}">
+      <image class="wx-icon" src="/images/wx_login.png"></image>
+      <text>微信一键登录</text>
+    </button>
+
+  </view>
+</view>

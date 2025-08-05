@@ -6,7 +6,7 @@
     <view class="form-item">
       <text class="label">约球时间</text>
       <picker mode="date" value="{{selectedDate}}" bindchange="onDatePickerChange">
-        <view class="picker time-picker">{{dateText}}</view>
+        <view class="picker time-picker" data-selected="{{timeSelected}}">{{dateText}}</view>
       </picker>
     </view>
     <view wx:if="{{showTimeSheet}}" class="bottom-sheet-mask" catchtap="onCloseTimeSheet">
@@ -23,7 +23,7 @@
     <view class="form-item">
       <text class="label">约球地点</text>
       <picker mode="selector" range="{{locationOptions}}" value="{{locationIndex}}" bindchange="onLocationChange">
-        <view class="picker">{{locationOptions[locationIndex] || '请选择地点'}}</view>
+        <view class="picker" data-selected="{{locationSelected}}">{{locationOptions[locationIndex] || '请选择地点'}}</view>
       </picker>
     </view>
     
@@ -31,13 +31,13 @@
       <view class="form-item-half">
         <text class="label">场地人数</text>
         <picker range="{{playerCounts}}" value="{{playerCountIndex}}" bindchange="onPlayerCountChange">
-          <view class="picker">{{playerCounts[playerCountIndex] || '请选择人数'}}</view>
+          <view class="picker" data-selected="{{playerCountSelected}}">{{playerCounts[playerCountIndex] || '请选择人数'}}</view>
         </picker>
       </view>
       <view class="form-item-half">
         <text class="label">捞人人数</text>
         <picker range="{{recruitCount}}" value="{{recruitCountIndex}}" bindchange="onRecruitCountChange">
-          <view class="picker">{{recruitCount[recruitCountIndex] || '请选择捞人人数'}}</view>
+          <view class="picker" data-selected="{{recruitCountSelected}}">{{recruitCount[recruitCountIndex] || '请选择捞人人数'}}</view>
         </picker>
       </view>
     </view>
@@ -61,7 +61,7 @@
     <view class="form-item">
       <text class="label">约球等级</text>
       <picker mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="onLevelChange">
-        <view class="picker">{{levelOptions[levelIndex] || '请选择等级'}}</view>
+        <view class="picker" data-selected="{{levelSelected}}">{{levelOptions[levelIndex] || '请选择等级'}}</view>
       </picker>
     </view>
     
@@ -84,6 +84,7 @@
       <view class="input-tip">请填写qq号或手机号，方便联系</view>
     </view>
     <view class="form-tip">请确认信息无误后再发布</view>
+    <view class="form-tip">发布后可以在“我发布的”重新编辑</view>
     <button class="submit-btn" bindtap="onSubmit">发布约球</button>
   </view>
 </view>

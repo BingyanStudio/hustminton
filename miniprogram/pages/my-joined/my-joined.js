@@ -1,5 +1,5 @@
 const db = wx.cloud.database()
-const matchCollection = db.collection('match')
+const matchCollection = db.collection('matches')
 const cloudService = require('../../utils/cloud')
 
 Page({
@@ -23,11 +23,60 @@ Page({
 
   async loadMyJoinedActivities() {
     try {
-      const result = await cloudService.callFunction('getMyJoined', {});
+      // 直接使用wx.cloud.callFunction，避免云服务初始化问题
+      const response = await wx.cloud.callFunction({
+        name: 'getMyJoined',
+        data: {}
+      });
+
+      console.log('云函数响应:', response);
+
+      // 检查响应是否成功
+      if (!response || response.errCode) {
+        throw new Error(response ? response.errMsg : '云函数调用失败');
+      }
+
+      const result = response.result;
       console.log('获取到的数据:', result);
 
+      // 检查结果是否成功
+      if (!result || !result.success) {
+        throw new Error(result ? result.message : '获取数据失败');
+      }
+
+      const data = result.data || {};
+
       // 合并所有活动，然后根据时间重新分类
-      const allActivities = [...(result.ongoingList || []), ...(result.finishedList || [])];
+      const allActivities = [...(data.ongoingList || []), ...(data.finishedList || [])];
+
+      // 时间判断工具函数
+      function isMatchFinished(matchData) {
+        if (!matchData.date || !matchData.timeSlot) {
+          return false;
+        }
+
+        try {
+          // 解析时间段，获取结束时间
+          const timeSlotParts = matchData.timeSlot.split('-');
+          if (timeSlotParts.length !== 2) {
+            return false;
+          }
+
+          const endTime = timeSlotParts[1]; // 例如 "10:00"
+          const [endHour, endMinute] = endTime.split(':').map(num => parseInt(num));
+
+          // 构建活动结束时间
+          const matchEndTime = new Date(matchData.date);
+          matchEndTime.setHours(endHour, endMinute, 0, 0);
+
+          // 与当前时间比较
+          const now = new Date();
+          return now > matchEndTime;
+        } catch (error) {
+          console.error('判断活动是否结束时出错:', error);
+          return false;
+        }
+      }
 
       const ongoingList = [];
       const finishedList = [];
@@ -36,7 +85,7 @@ Page({
         const participantCount = item.participants ? item.participants.length : 0;
         const playerCount = parseInt(item.playerCount) || 0;
         const isFull = participantCount >= playerCount;
-        const isFinished = cloudService.isMatchFinished(item);
+        const isFinished = isMatchFinished(item);
 
         const processedItem = {
           ...item,
@@ -68,9 +117,12 @@ Page({
           是否满员: ongoingList[0].isFull
         } : '无活动'
       });
-    } catch (e) {
-      wx.showToast({ title: e.message || '获取活动失败', icon: 'none' });
-      console.error('获取活动失败:', e);
+    } catch (error) {
+      console.error('获取活动失败:', error);
+      wx.showToast({
+        title: '获取活动失败: ' + (error.message || error),
+        icon: 'none'
+      });
     }
   },
 

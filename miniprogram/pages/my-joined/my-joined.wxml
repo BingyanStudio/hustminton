@@ -25,7 +25,12 @@
         <text>{{expandedMatches[item._id] ? '收起' : '展开'}}</text>
       </view>
       <view wx:if="{{expandedMatches[item._id]}}" class="card-detail">
-        <view class="card-contact">联系方式：{{item.contact}}</view>
+        <view class="card-contact">
+  <view wx:if="{{item.contactType === 'QQ'}}">QQ：{{item.contactValue}}</view>
+  <view wx:elif="{{item.contactType === '微信'}}">微信：{{item.contactValue}}</view>
+  <view wx:elif="{{item.contactType === '电话'}}">电话：{{item.contactValue}}</view>
+  <view wx:else>{{item.contact || '未设置联系方式'}}</view>
+</view>
         <view class="card-desc">备注：{{item.description}}</view>
         <view class="card-detail-bottom-row">
           <view class="card-avatars">
@@ -89,6 +94,10 @@
     <view class="profile-row">
       <view class="profile-label">昵称</view>
       <input class="profile-input" value="{{profileUser.nickName || profileUser.name}}" disabled />
+    </view>
+    <view class="profile-row">
+      <view class="profile-label">{{profileUser.contactType || '联系方式'}}</view>
+      <input class="profile-input" value="{{profileUser.contactValue || profileUser.phone || profileUser.contact || '未设置'}}" disabled />
     </view>
     <view class="profile-row">
       <view class="profile-label">性别</view>
