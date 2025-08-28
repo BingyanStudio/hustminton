@@ -9,7 +9,7 @@ var config = {
     secure: true, // 使用SSL
     auth: {
         user: '1022818233@qq.com', //邮箱账号
-        pass: ''  //邮箱的授权码
+        pass: 'jzrfppbymhexbfdf'  //邮箱的授权码
     },
     // 增加超时设置
 };
@@ -25,7 +25,7 @@ exports.main = async(event, context) => {
 
         // 构建邮件内容
         const emailContent = `
-华科羽毛球小程序 - 用户反馈
+羽毛球小程序 - 用户反馈
 
 反馈类型：${feedbackData.type}
 用户昵称：${feedbackData.userInfo?.nickName || '匿名用户'}
@@ -36,16 +36,16 @@ exports.main = async(event, context) => {
 ${feedbackData.content}
 
 ---
-此邮件由华科羽毛球小程序自动发送
+此邮件由羽毛球小程序自动发送
 请及时处理用户反馈，提升用户体验
         `.trim();
 
         // 创建一个邮件对象
         var mail = {
             // 发件人（必须与auth.user一致）
-            from: '"华科羽毛球小程序" <1022818233@qq.com>',
+            from: '"羽毛球小程序" <1022818233@qq.com>',
             // 主题
-            subject: `[华科羽毛球小程序] ${feedbackData.type} - ${feedbackData.userInfo?.nickName || '匿名用户'}`,
+            subject: `[羽毛球小程序] ${feedbackData.type} - ${feedbackData.userInfo?.nickName || '匿名用户'}`,
             // 收件人
             to: '1360294403@qq.com',
             // 邮件内容
